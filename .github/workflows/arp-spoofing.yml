@@ -24,13 +24,13 @@ jobs:
         run: |
           echo "Attacker IP: ${{ secrets.ATTACKER_IP }}"
           echo "Target IP: ${{ secrets.TARGET_IP }}"
-          
+
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H $ATTACKER_IP >> ~/.ssh/known_hosts
+          
 
       - name: Deploy attack script to attacker machine
         run: |
