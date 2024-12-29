@@ -7,52 +7,49 @@ on:
   schedule:
     - cron: '0 */6 * * *'  # Run every 6 hours
 
+env:
+  ATTACKER_IP: 127.0.0.1  # Use localhost
+  TARGET_IP: 127.0.0.1    # Use localhost
+  ATTACKER_PORT: 2222     # Port forwarded to attacker VM
+  SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+    
 jobs:
   run-arp-spoof:
     runs-on: ubuntu-latest
-    
-    env:
-      ATTACKER_IP: ${{ secrets.ATTACKER_IP }}
-      TARGET_IP: ${{ secrets.TARGET_IP }}
-      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-      
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Debug Environment Variables
         run: |
-          echo "Attacker IP: ${{ secrets.ATTACKER_IP }}"
-          echo "Target IP: ${{ secrets.TARGET_IP }}"
+          echo "Attacker IP: $ATTACKER_IP"
+          echo "Target IP: $TARGET_IP"
+
+      - name: Set up SSH key
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Check if attacker machine is reachable
         run: |
-          ping -c 4 $ATTACKER_IP
-
-      - name: Set up SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          
+          ssh -p $ATTACKER_PORT rb@$ATTACKER_IP "echo 'Connected to Attacker'"
 
       - name: Deploy attack script to attacker machine
         run: |
-          scp -v arp_spoof.sh rb@$ATTACKER_IP:/home/rb/
-          ssh -v rb@$ATTACKER_IP "chmod +x /home/rb/arp_spoof.sh"
-
+          scp -P $ATTACKER_PORT arp_spoof.sh rb@$ATTACKER_IP:/home/rb/
+          ssh -p $ATTACKER_PORT rb@$ATTACKER_IP "chmod +x /home/rb/arp_spoof.sh"
 
       - name: Execute ARP spoofing attack
         run: |
-          ssh rb@$ATTACKER_IP "sudo /home/rb/arp_spoof.sh $TARGET_IP"
+          ssh -p $ATTACKER_PORT rb@$ATTACKER_IP "sudo /home/rb/arp_spoof.sh $TARGET_IP"
 
       - name: Collect and store results
         run: |
-          ssh rb@$ATTACKER_IP "cat /home/rb/arp_attack_logs.txt" > attack_results.txt
-          
+          ssh -p $ATTACKER_PORT rb@$ATTACKER_IP "cat /home/rb/arp_attack_logs.txt" > results/attack_logs_${{ github.sha }}.txt
+
       - name: Upload attack results
         uses: actions/upload-artifact@v4
         with:
-          name: arp-spoof-results
-          path: attack_results.txt
+          name: arp-spoof-results-${{ github.sha }}
+          path: results/attack_logs_${{ github.sha }}.txt
           retention-days: 5
