@@ -18,7 +18,7 @@ jobs:
       
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up SSH key
         run: |
@@ -27,7 +27,7 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H $ATTACKER_IP >> ~/.ssh/known_hosts
 
-      - name: Deploy attack script to Kali machine
+      - name: Deploy attack script to attacker machine
         run: |
           scp arp_spoof.sh rb@$ATTACKER_IP:/home/rb/
           ssh rb@$ATTACKER_IP "chmod +x /home/rb/arp_spoof.sh"
@@ -41,7 +41,8 @@ jobs:
           ssh rb@$ATTACKER_IP "cat /home/rb/arp_attack_logs.txt" > attack_results.txt
           
       - name: Upload attack results
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: arp-spoof-results
           path: attack_results.txt
+          retention-days: 5
