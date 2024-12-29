@@ -2,7 +2,7 @@
 
 # arp_spoof.sh
 TARGET_IP=$1
-LOG_FILE="/home/kali/arp_attack_logs.txt"
+LOG_FILE="/home/rb/arp_attack_logs.txt"
 GATEWAY_IP="192.168.11.1"  # Adjust to your network
 
 # Function to log messages
