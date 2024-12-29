@@ -35,7 +35,7 @@ jobs:
       - name: Deploy attack script to attacker machine
         run: |
           scp arp_spoof.sh rb@$ATTACKER_IP:/home/rb/
-          ssh rb@$ATTACKER_IP "chmod +x /home/rb/arp_spoof.sh"
+          ssh -v rb@$ATTACKER_IP "chmod +x /home/rb/arp_spoof.sh"
 
 
       - name: Execute ARP spoofing attack
