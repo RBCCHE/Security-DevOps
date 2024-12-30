@@ -7,17 +7,19 @@ on:
 
 jobs:
   ssh-test:
-    runs-on: self-hosted  # Adjust if you're using GitHub-hosted runners
+    runs-on: self-hosted  # Adjust if using GitHub-hosted runners
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3  # Checkout the code to access arp_spoof.sh
+        uses: actions/checkout@v3  # Ensure arp_spoof.sh is available
 
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/id_rsa
           ssh-keyscan -H 172.30.117.123 >> ~/.ssh/known_hosts
 
       - name: SSH into Kali VM
