@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: SSH into Target VM and Execute ARP Spoofing
         run: |
-          ssh rb@172.30.117.123 "sudo /home/rb/target_vm_arp_spoof.sh 172.30.124.62"
+          ssh rb@172.30.117.123 "sudo /home/rb/arp_spoof.sh 172.30.124.62"
 
       - name: Download capture file from Target VM
         run: |
