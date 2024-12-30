@@ -36,7 +36,10 @@ jobs:
 
       - name: Add Serveo host key to known_hosts
         run: |
-          ssh-keyscan -H serveo.net >> ~/.ssh/known_hosts
+          ssh-keyscan -p $ATTACKER_PORT -H $ATTACKER_IP >> ~/.ssh/known_hosts
+          # Ensure SSH debug output
+          echo "LogLevel DEBUG3" >> ~/.ssh/config
+          echo "StrictHostKeyChecking accept-new" >> ~/.ssh/config
 
       - name: Deploy attack script to attacker machine
         run: |
