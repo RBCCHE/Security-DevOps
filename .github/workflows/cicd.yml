@@ -26,16 +26,16 @@ jobs:
 
       - name: Deploy attack script to Kali machine
         run: |
-          scp arp_spoof.sh kali@172.30.117.123:/home/kali/
-          ssh kali@172.30.117.123 "chmod +x /home/kali/arp_spoof.sh"
+          scp arp_spoof.sh rb@172.30.117.123:/home/rb/
+          ssh rb@172.30.117.123 "chmod +x /home/rb/arp_spoof.sh"
 
       - name: Execute ARP spoofing attack
         run: |
-          ssh kali@172.30.117.123 "sudo /home/kali/arp_spoof.sh 172.30.124.62"
+          ssh rb@172.30.117.123 "sudo /home/rb/arp_spoof.sh 172.30.124.62"
 
       - name: Collect and store results
         run: |
-          ssh kali@172.30.117.123 "cat /home/kali/arp_attack_logs.txt" > attack_results.txt
+          ssh rb@172.30.117.123 "cat /home/rb/arp_attack_logs.txt" > attack_results.txt
           
       - name: Upload attack results
         uses: actions/upload-artifact@v4
