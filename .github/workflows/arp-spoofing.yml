@@ -26,9 +26,7 @@ jobs:
           echo "Attacker IP: ${{ secrets.ATTACKER_IP }}"
           echo "Target IP: ${{ secrets.TARGET_IP }}"
 
-      - name: Check if attacker machine is reachable
-        run: |
-          ping -c 4 $ATTACKER_IP
+      
 
       - name: Set up SSH key
         run: |
@@ -38,7 +36,7 @@ jobs:
 
       - name: Add Serveo host key to known_hosts
         run: |
-          ssh-keyscan -H cicdpipe.serveo.net >> ~/.ssh/known_hosts
+          ssh-keyscan -H serveo.net >> ~/.ssh/known_hosts
 
       - name: Deploy attack script to attacker machine
         run: |
