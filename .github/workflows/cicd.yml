@@ -1,0 +1,16 @@
+name: Test SSH to Kali VM
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  ssh-test:
+    runs-on: self-hosted
+    steps:
+      - name: SSH into Kali VM
+        run: |
+          ssh -o StrictHostKeyChecking=no rb@172.30.124.62 'ls -la'
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
