@@ -38,7 +38,7 @@ sudo tcpdump -i eth0 -w $CAPTURE_FILE &
 TCPDUMP_PID=$!
 
 # Run for 60 seconds
-sleep 60
+sleep 300
 
 # Cleanup
 kill $SPOOF_PID
