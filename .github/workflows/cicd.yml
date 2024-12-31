@@ -20,7 +20,7 @@ jobs:
 
       - name: Download capture file from Target VM
         run: |
-          scp rb@172.30.117.123:/home/rb/arp_capture.pcap ./arp_capture.pcap
+          scp rb@172.30.117.123:/tmp/arp_capture.pcap ./arp_capture.pcap
 
       - name: Upload pcap file for Analysis
         uses: actions/upload-artifact@v4
