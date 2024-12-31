@@ -4,7 +4,7 @@
 TARGET_IP=$1
 LOG_FILE="/home/rb/arp_attack_logs.txt"
 GATEWAY_IP="172.30.112.1"  # Adjust to your network
-CAPTURE_FILE="/tmp/arp_capture.pcap"  # Path to capture file
+CAPTURE_FILE="/home/rb/arp_capture.pcap"# Path to capture file
 
 # Function to log messages
 log_message() {
@@ -34,7 +34,7 @@ SPOOF_PID=$!
 
 # Start TCP dump to capture traffic
 log_message "Starting traffic capture"
-tcpdump -i eth0 -w $CAPTURE_FILE &
+sudo tcpdump -i eth0 -w $CAPTURE_FILE &
 TCPDUMP_PID=$!
 
 # Run for 60 seconds
