@@ -1,4 +1,4 @@
-name: ARP Spoofing Attack and Capture
+name: Test SSH to Kali VM
 
 on:
   push:
@@ -6,25 +6,42 @@ on:
       - main
 
 jobs:
-  arp-spoof-attack:
-    runs-on: self-hosted  # Assuming self-hosted runner with SSH access to the target
+  ssh-test:
+    runs-on: self-hosted  # Adjust if using GitHub-hosted runners
 
     steps:
-      - name: SSH into Target VM and Execute ARP Spoofing
+      - name: Checkout repository
+        uses: actions/checkout@v3  # Ensure arp_spoof.sh is available
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/id_rsa
+          ssh-keyscan -H 172.30.117.123 >> ~/.ssh/known_hosts
+
+      - name: SSH into Kali VM
+        run: |
+          ssh -o StrictHostKeyChecking=no rb@172.30.117.123 'ls -la'
+
+      - name: Deploy attack script to Kali machine
+        run: |
+          scp arp_spoof.sh rb@172.30.117.123:/home/rb/
+          ssh rb@172.30.117.123 "chmod +x /home/rb/arp_spoof.sh"
+
+      - name: Execute ARP spoofing attack
         run: |
           ssh rb@172.30.117.123 "sudo /home/rb/arp_spoof.sh 172.30.124.62"
 
-      - name: Check if capture file exists on Target VM
+      - name: Collect and store results
         run: |
-          ssh rb@172.30.117.123 "ls -l /home/rb/"
-
-      - name: Download capture file from Target VM
-        run: |
-          scp rb@172.30.117.123:/tmp/arp_capture.pcap ./arp_capture.pcap
-
-      - name: Upload pcap file for Analysis
+          ssh rb@172.30.117.123 "cat /home/rb/arp_attack_logs.txt" > attack_results.txt
+          
+      - name: Upload attack results
         uses: actions/upload-artifact@v4
         with:
-          name: arp-traffic-capture
-          path: ./arp_capture.pcap
+          name: arp-spoof-results
+          path: attack_results.txt
           retention-days: 5
