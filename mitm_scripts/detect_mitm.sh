@@ -1,25 +1,27 @@
 #!/bin/bash
 
-INTERFACE="eth0"
-DURATION=60
-TEMP_FILE="/tmp/arp_scan.log"
+# Output file for logs
 LOG_FILE="/home/rb/mitm_detection_logs.txt"
 
-> "$TEMP_FILE"
-> "$LOG_FILE"
+# Clear old logs
+> $LOG_FILE
 
-echo "[INFO] Monitoring ARP packets for $DURATION seconds..." | tee -a "$LOG_FILE"
-tshark -i "$INTERFACE" -Y "arp.opcode == 2" -T fields -e arp.src.hw_mac -e arp.src.proto_ipv4 > "$TEMP_FILE" &
+echo "[+] Monitoring network for ARP Spoofing attacks..."
+echo "===========================================" >> $LOG_FILE
+echo "[+] MITM Detection started at: $(date)" >> $LOG_FILE
+echo "===========================================" >> $LOG_FILE
 
-TSHARK_PID=$!
-sleep "$DURATION"
-kill "$TSHARK_PID"
-
-echo "[INFO] Analyzing ARP packets..." | tee -a "$LOG_FILE"
-cat "$TEMP_FILE" | sort | uniq -c | sort -nr | while read count mac ip; do
-    if [ "$count" -gt 1 ]; then
-        echo "[ALERT] Possible MITM Attack detected! IP: $ip has multiple MAC addresses." | tee -a "$LOG_FILE"
+# Run tshark to capture ARP packets, filtering only replies
+tshark -i eth0 -n -Y "arp.opcode == 2" -T fields -e arp.src.hw_mac -e arp.src.proto_ipv4 2>/dev/null | \
+while read -r mac ip; do
+    # Check if IP is already seen with a different MAC
+    if grep -q "$ip" $LOG_FILE; then
+        prev_mac=$(grep "$ip" $LOG_FILE | awk '{print $3}')
+        if [[ "$prev_mac" != "$mac" ]]; then
+            echo "[!] ALERT: Possible MITM Attack detected!" | tee -a $LOG_FILE
+            echo "[!] IP $ip is now associated with $mac (previously $prev_mac)" | tee -a $LOG_FILE
+        fi
+    else
+        echo "$ip - $mac" >> $LOG_FILE
     fi
 done
-
-echo "[INFO] Detection completed." | tee -a "$LOG_FILE"
