@@ -7,7 +7,7 @@ on:
 
 jobs:
   mitm_attack:
-    runs-on: [self-hosted, cicd-mitm]  # Runner on CI/CD machine
+    runs-on: [self-hosted, cicd-mitm]  # Runner sur la machine CI/CD MITM
 
     steps:
       - name: Checkout repository
@@ -23,35 +23,29 @@ jobs:
           ssh-keyscan -H ${{ secrets.ATTACKER_IP_MITM }} >> ~/.ssh/known_hosts
           ssh-keyscan -H ${{ secrets.TARGET_IP_MITM }} >> ~/.ssh/known_hosts
 
-      # Deploy Attack Script to Attacker Machine
-      - name: Deploy MITM Attack Script
+      # ✅ Start Detection Before the Attack
+      - name: Start MITM Detection on Target Machine
+        run: |
+          ssh rb@${{ secrets.TARGET_IP_MITM }} "nohup sudo /home/rb/detect_mitm.sh > /home/rb/detect_log.txt 2>&1 &"
+      
+      # ✅ Deploy Attack Script to Attacker Machine
+      - name: Deploy attack script to Attacker Machine
         run: |
           scp mitm_scripts/arp_spoof.sh rb@${{ secrets.ATTACKER_IP_MITM }}:/home/rb/
           ssh rb@${{ secrets.ATTACKER_IP_MITM }} "chmod +x /home/rb/arp_spoof.sh"
 
-      # Deploy Detection Script to Target Machine
-      - name: Deploy MITM Detection Script
-        run: |
-          scp mitm_scripts/detect_mitm.sh rb@${{ secrets.TARGET_IP_MITM }}:/home/rb/
-          ssh rb@${{ secrets.TARGET_IP_MITM }} "chmod +x /home/rb/detect_mitm.sh"
-
-      # Start Detection BEFORE Attack
-      - name: Start MITM Detection on Target Machine (Background)
-        run: |
-          ssh rb@${{ secrets.TARGET_IP_MITM }} "nohup sudo /home/rb/detect_mitm.sh > /home/rb/detect_log.txt 2>&1 &"
-
-      # Execute MITM Attack
+      # ✅ Execute MITM Attack
       - name: Execute MITM Attack
         run: |
           ssh rb@${{ secrets.ATTACKER_IP_MITM }} "sudo /home/rb/arp_spoof.sh ${{ secrets.TARGET_IP_MITM }}"
 
-      # Stop Detection and Collect Logs
+      # ✅ Stop Detection & Collect Logs
       - name: Stop Detection & Collect Logs
         run: |
-         ssh rb@${{ secrets.TARGET_IP_MITM }} "pkill -f detect_mitm.sh; sleep 2"
-         scp rb@${{ secrets.TARGET_IP_MITM }}:/home/rb/detect_log.txt detection_results.txt
+          ssh rb@${{ secrets.TARGET_IP_MITM }} "sudo pkill -f detect_mitm.sh"
+          scp rb@${{ secrets.TARGET_IP_MITM }}:/home/rb/detect_log.txt detection_results.txt
 
-
+      # ✅ Upload Detection Results
       - name: Upload Detection Results
         uses: actions/upload-artifact@v4
         with:
@@ -59,9 +53,13 @@ jobs:
           path: detection_results.txt
           retention-days: 5
 
-      # Deploy & Execute Protection Script
-      - name: Deploy & Execute MITM Protection on Target Machine
+      # ✅ Deploy Protection Script to Target Machine
+      - name: Deploy Protection Script to Target Machine
         run: |
           scp mitm_scripts/protect_mitm.sh rb@${{ secrets.TARGET_IP_MITM }}:/home/rb/
           ssh rb@${{ secrets.TARGET_IP_MITM }} "chmod +x /home/rb/protect_mitm.sh"
+    
+      # ✅ Execute MITM Protection on Target Machine
+      - name: Execute MITM Protection on Target Machine
+        run: |
           ssh rb@${{ secrets.TARGET_IP_MITM }} "sudo /home/rb/protect_mitm.sh"
