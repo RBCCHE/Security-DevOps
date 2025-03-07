@@ -23,33 +23,30 @@ jobs:
           ssh-keyscan -H ${{ secrets.ATTACKER_IP_MITM }} >> ~/.ssh/known_hosts
           ssh-keyscan -H ${{ secrets.TARGET_IP_MITM }} >> ~/.ssh/known_hosts
 
-      # --- Deploy Attack Script ---
+      # --- Deploy & Execute MITM Attack ---
       - name: Deploy attack script to Attacker Machine
         run: |
           scp mitm_scripts/arp_spoof.sh rb@${{ secrets.ATTACKER_IP_MITM }}:/home/rb/
           ssh rb@${{ secrets.ATTACKER_IP_MITM }} "chmod +x /home/rb/arp_spoof.sh"
 
-        # Execute MITM Attack
       - name: Execute MITM Attack
         run: |
           ssh rb@${{ secrets.ATTACKER_IP_MITM }} "sudo /home/rb/arp_spoof.sh ${{ secrets.TARGET_IP_MITM }}"
 
-
-      # --- Deploy Detection Script ---
+      # --- Deploy & Execute MITM Detection ---
       - name: Deploy detection script to Target Machine
         run: |
           scp mitm_scripts/detect_mitm.sh rb@${{ secrets.TARGET_IP_MITM }}:/home/rb/
           ssh rb@${{ secrets.TARGET_IP_MITM }} "chmod +x /home/rb/detect_mitm.sh"
 
-      # --- Start MITM Detection while attack is running ---
       - name: Execute MITM Detection on Target Machine
         run: |
           ssh rb@${{ secrets.TARGET_IP_MITM }} "sudo /home/rb/detect_mitm.sh"
 
-      # --- Collect Attack Logs ---
+      # --- Collect Logs ---
       - name: Collect Attack Logs
         run: |
-          ssh rb@${{ secrets.ATTACKER_IP_MITM }} "cat /home/rb/arp_attack_logs.txt" > attack_results.txt
+          scp rb@${{ secrets.ATTACKER_IP_MITM }}:/home/rb/arp_attack_logs.txt ./attack_results.txt
 
       - name: Upload Attack Results
         uses: actions/upload-artifact@v4
@@ -58,10 +55,9 @@ jobs:
           path: attack_results.txt
           retention-days: 5
 
-      # --- Collect Detection Logs ---
       - name: Collect Detection Logs
         run: |
-          ssh rb@${{ secrets.TARGET_IP_MITM }} "cat /home/rb/mitm_detection_logs.txt" > detection_results.txt
+          scp rb@${{ secrets.TARGET_IP_MITM }}:/home/rb/mitm_detection_logs.txt ./detection_results.txt
 
       - name: Upload Detection Results
         uses: actions/upload-artifact@v4
@@ -70,13 +66,12 @@ jobs:
           path: detection_results.txt
           retention-days: 5
           
-      # --- Deploy Protection Script ---
+      # --- Deploy & Execute Protection ---
       - name: Deploy Protection Script to Target Machine
         run: |
           scp mitm_scripts/protect_mitm.sh rb@${{ secrets.TARGET_IP_MITM }}:/home/rb/
           ssh rb@${{ secrets.TARGET_IP_MITM }} "chmod +x /home/rb/protect_mitm.sh"
     
-      # --- Execute Protection ---
       - name: Execute MITM Protection on Target Machine
         run: |
           ssh rb@${{ secrets.TARGET_IP_MITM }} "sudo /home/rb/protect_mitm.sh"
