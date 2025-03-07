@@ -3,6 +3,7 @@
 # arp_spoof.sh
 TARGET_IP=$1
 LOG_FILE="/home/rb/arp_attack_logs.txt"
+GATEWAY_IP="192.168.2.1"  # Adjust to your network
 
 # Function to log messages
 log_message() {
