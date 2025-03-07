@@ -1,22 +1,21 @@
 #!/bin/bash
 
 INTERFACE="eth0"
-DURATION=60  # Monitor for 1 minute
+DURATION=60
 TEMP_FILE="/tmp/arp_scan.log"
 LOG_FILE="/home/rb/mitm_detection_logs.txt"
 
-# Cleanup old logs
 > "$TEMP_FILE"
 > "$LOG_FILE"
 
 echo "[INFO] Monitoring ARP packets for $DURATION seconds..." | tee -a "$LOG_FILE"
-tshark -i "$INTERFACE" -Y "arp.opcode == 2" -T fields -e arp.src.hw_mac -e arp.src.proto_ipv4 | tee -a "$TEMP_FILE" &
+tshark -i "$INTERFACE" -Y "arp.opcode == 2" -T fields -e arp.src.hw_mac -e arp.src.proto_ipv4 > "$TEMP_FILE" &
 
 TSHARK_PID=$!
 sleep "$DURATION"
 kill "$TSHARK_PID"
 
-echo "[INFO] Analyzing captured ARP packets..." | tee -a "$LOG_FILE"
+echo "[INFO] Analyzing ARP packets..." | tee -a "$LOG_FILE"
 cat "$TEMP_FILE" | sort | uniq -c | sort -nr | while read count mac ip; do
     if [ "$count" -gt 1 ]; then
         echo "[ALERT] Possible MITM Attack detected! IP: $ip has multiple MAC addresses." | tee -a "$LOG_FILE"
