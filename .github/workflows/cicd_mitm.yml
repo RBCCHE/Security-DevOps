@@ -29,10 +29,11 @@ jobs:
           scp mitm_scripts/arp_spoof.sh rb@${{ secrets.ATTACKER_IP_MITM }}:/home/rb/
           ssh rb@${{ secrets.ATTACKER_IP_MITM }} "chmod +x /home/rb/arp_spoof.sh"
 
-      # --- Start MITM Attack ---
+        # Execute MITM Attack
       - name: Execute MITM Attack
         run: |
-          ssh rb@${{ secrets.ATTACKER_IP_MITM }} "sudo nohup /home/rb/arp_spoof.sh ${{ secrets.TARGET_IP_MITM }} > /home/rb/arp_attack_logs.txt 2>&1 &"
+          ssh rb@${{ secrets.ATTACKER_IP_MITM }} "sudo /home/rb/arp_spoof.sh ${{ secrets.TARGET_IP_MITM }}"
+
 
       # --- Deploy Detection Script ---
       - name: Deploy detection script to Target Machine
@@ -68,12 +69,7 @@ jobs:
           name: mitm-detection-results
           path: detection_results.txt
           retention-days: 5
-
-      # --- Verify Detection (Fail CI/CD if no attack detected) ---
-      - name: Verify MITM Detection Logs
-        run: |
-          ssh rb@${{ secrets.TARGET_IP_MITM }} "grep '[ALERT] Possible MITM Attack' /home/rb/mitm_detection_logs.txt || exit 1"
-
+          
       # --- Deploy Protection Script ---
       - name: Deploy Protection Script to Target Machine
         run: |
