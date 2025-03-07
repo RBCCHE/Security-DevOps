@@ -54,7 +54,7 @@ jobs:
 
       - name: Execute MITM Detection on Target Machine
         run: |
-          ssh rb@${{ secrets.TARGET_IP_MITM }} "sudo su /home/rb/detect_mitm.sh"
+          ssh rb@${{ secrets.TARGET_IP_MITM }} "sudo /home/rb/detect_mitm.sh"
 
       - name: Deploy Protection Script to Target Machine
         run: |
