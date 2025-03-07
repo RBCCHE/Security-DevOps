@@ -25,7 +25,7 @@ jobs:
 
       - name: Deploy attack script to Attacker Machine
         run: |
-          scp scripts/arp_spoof.sh rb@${{ secrets.ATTACKER_IP }}:/home/rb/
+          scp ./arp_spoof.sh rb@${{ secrets.ATTACKER_IP }}:/home/rb/
           ssh rb@${{ secrets.ATTACKER_IP }} "chmod +x /home/rb/arp_spoof.sh"
 
       - name: Execute MITM Attack
@@ -45,7 +45,7 @@ jobs:
 
       - name: Deploy Detection Script to Target Machine
         run: |
-          scp scripts/detect_mitm.sh rb@${{ secrets.TARGET_IP }}:/home/rb/
+          scp ./detect_mitm.sh rb@${{ secrets.TARGET_IP }}:/home/rb/
           ssh rb@${{ secrets.TARGET_IP }} "chmod +x /home/rb/detect_mitm.sh"
 
       - name: Execute MITM Detection on Target Machine
@@ -54,7 +54,7 @@ jobs:
 
       - name: Deploy Protection Script to Target Machine
         run: |
-          scp scripts/protect_mitm.sh rb@${{ secrets.TARGET_IP }}:/home/rb/
+          scp ./protect_mitm.sh rb@${{ secrets.TARGET_IP }}:/home/rb/
           ssh rb@${{ secrets.TARGET_IP }} "chmod +x /home/rb/protect_mitm.sh"
 
       - name: Execute MITM Protection on Target Machine
