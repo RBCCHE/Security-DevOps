@@ -18,7 +18,7 @@ kill "$TSHARK_PID"
 
 echo "[INFO] Analyse des paquets ARP capturés..." | tee -a "$LOG_FILE"
 cat "$TEMP_FILE" | sort | uniq -c | sort -nr | while read count mac ip; do
-    if [ "$count" -gt 1" ]; then
+    if [ "$count" -gt 1 ]; then
         echo "[ALERT] Possible MITM Attack detected! IP: $ip has multiple MAC addresses." | tee -a "$LOG_FILE"
     fi
 done
