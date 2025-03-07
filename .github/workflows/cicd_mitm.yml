@@ -48,8 +48,9 @@ jobs:
       # Stop Detection and Collect Logs
       - name: Stop Detection & Collect Logs
         run: |
-          ssh rb@${{ secrets.TARGET_IP_MITM }} "pkill -f detect_mitm.sh"
-          ssh rb@${{ secrets.TARGET_IP_MITM }} "cat /home/rb/detect_log.txt" > detection_results.txt
+         ssh rb@${{ secrets.TARGET_IP_MITM }} "pkill -f detect_mitm.sh; sleep 2"
+         scp rb@${{ secrets.TARGET_IP_MITM }}:/home/rb/detect_log.txt detection_results.txt
+
 
       - name: Upload Detection Results
         uses: actions/upload-artifact@v4
