@@ -22,6 +22,10 @@ jobs:
           ssh-add ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.ATTACKER_IP }} >> ~/.ssh/known_hosts
           ssh-keyscan -H ${{ secrets.TARGET_IP }} >> ~/.ssh/known_hosts
+     
+      - name: SSH into Kali VM
+        run: |
+          ssh -o StrictHostKeyChecking=no rb@${{ secrets.ATTACKER_IP }} 'ls -la'
 
       - name: Deploy attack script to Attacker Machine
         run: |
