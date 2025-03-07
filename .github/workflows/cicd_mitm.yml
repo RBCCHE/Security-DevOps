@@ -65,7 +65,29 @@ jobs:
           name: mitm-detection-results
           path: detection_results.txt
           retention-days: 5
-          
+            # --- Collect Logs & Send to Loki ---
+      - name: Send Attack Logs to Loki
+        run: |
+          curl -X POST http://localhost:3100/loki/api/v1/push -H "Content-Type: application/json" -d '{
+            "streams": [
+              {
+                "stream": { "job": "mitm_attack", "host": "attacker" },
+                "values": [ ["'$(date +%s%N)'" , "'$(cat attack_results.txt | tr -d '\n')'"] ]
+              }
+            ]
+          }'
+
+      - name: Send Detection Logs to Loki
+        run: |
+          curl -X POST http://localhost:3100/loki/api/v1/push -H "Content-Type: application/json" -d '{
+            "streams": [
+              {
+                "stream": { "job": "mitm_detection", "host": "target" },
+                "values": [ ["'$(date +%s%N)'" , "'$(cat detection_results.txt | tr -d '\n')'"] ]
+              }
+            ]
+          }'
+
       # --- Deploy & Execute Protection ---
       - name: Deploy Protection Script to Target Machine
         run: |
